@@ -35,3 +35,29 @@ Promise.all([
     $entradas.appendChild($fragment);
 
     })
+    .catch(error => {
+        let message = error.statuText || "Ocurrió un error en la petición";
+    
+        $entradas.innerHTML = `Error: ${error.status}: ${message}`;
+    })
+
+    $d.addEventListener("click", e => {
+        if (e.target.matches(".entradas *")) {
+            let priceId = e.target.parentElement.getAttribute("data-price");
+    
+            Stripe(KEYS.public).redirectToCheckout({
+                lineItems: [{
+                    price: priceId,
+                    quantity: 1
+                }],
+                mode: "payment",
+                successUrl:"http://127.0.01:5501/assets/success.html",
+                cancelUrl:"http://127.0.01:5501/assets/cancel.html"
+            })
+            .then(res => {
+                if (res.error){
+                    $entradas.insertAdjacentElement("afterend", res.error.message)
+                }
+            })
+        }
+    })
