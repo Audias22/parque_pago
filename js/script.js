@@ -45,13 +45,17 @@ Promise.all([
         if (e.target.matches(".entradas *")) {
             let priceId = e.target.parentElement.getAttribute("data-price");
     
+            let product = products.find(p => p.id === priceId);
+            let productId = product ? product.id : "prod_RnLpZToxGH6M7e";
+
+
             Stripe(KEYS.public).redirectToCheckout({
                 lineItems: [{
                     price: priceId,
                     quantity: 1
                 }],
                 mode: "payment",
-                successUrl:"http://127.0.01:5501/assets/success.html",
+                successUrl:`http://127.0.0.1:5501/assets/success.html?product=${productId}`,
                 cancelUrl:"http://127.0.01:5501/assets/cancel.html"
             })
             .then(res => {
