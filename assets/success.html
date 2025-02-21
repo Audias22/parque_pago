@@ -40,88 +40,105 @@
          }
       }
 
-      document.addEventListener("DOMContentLoaded", async () => {
-   console.log("Todos los scripts han sido cargados correctamente.");
-   window.jsPDF = window.jspdf.jsPDF;
+      document.addEventListener("DOMContentLoaded", function () {
+    console.log("🔹 Todos los scripts han sido cargados correctamente.");
+    window.jsPDF = window.jspdf.jsPDF;
 
-   let params = new URLSearchParams(window.location.search);
-   let transactionId = params.get("transactionId") || localStorage.getItem("transactionId");
-   let productId = params.get("product");
+    let params = new URLSearchParams(window.location.search);
+    let transactionId = params.get("transactionId") || localStorage.getItem("transactionId");
+    let productId = params.get("product");
 
-   console.log("Producto detectado:", productId);
+    console.log("Producto detectado:", productId);
 
-   if (!productId) {
-      console.warn("⚠️ No se encontró un productId en la URL.");
-   }
+    if (!productId) {
+        console.warn("⚠️ No se encontró un productId en la URL.");
+    }
 
-   let entrada = "Tu Ticket";
+    let entrada = "Tu Ticket";
 
-   // ✅ Si no hay transactionId en la URL ni en localStorage, generar uno nuevo
-   if (!transactionId) {
-      transactionId = generarCodigoQR();
-      localStorage.setItem("transactionId", transactionId); // 🔹 Guardarlo para evitar duplicados
-      console.log("Nuevo transactionId generado:", transactionId);
-   } else {
-      console.log("Usando transactionId existente:", transactionId);
-   }
+    // ✅ Si no hay transactionId en la URL ni en localStorage, generar uno nuevo
+    if (!transactionId) {
+        transactionId = generarCodigoQR();
+        localStorage.setItem("transactionId", transactionId); // 🔹 Guardarlo para evitar duplicados
+        console.log("Nuevo transactionId generado:", transactionId);
+    } else {
+        console.log("Usando transactionId existente:", transactionId);
+    }
 
-   document.getElementById("transactionId").innerText = transactionId;
-   document.getElementById("entrada").innerText = entrada;
+    document.getElementById("transactionId").innerText = transactionId;
+    document.getElementById("entrada").innerText = entrada;
 
-   let qrContainer = document.getElementById("qrcode");
-   qrContainer.innerHTML = ""; 
-   const qrCode = new QRCodeStyling({
-      width: 250,
-      height: 250,
-      type: "svg",
-      data: `https://tu-parque.com/validar?ticket=${transactionId}`,
-      dotsOptions: { color: "#000", type: "rounded" },
-      backgroundOptions: { color: "#FFF" }
-   });
-   qrCode.append(qrContainer);
+    let qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = ""; 
+    const qrCode = new QRCodeStyling({
+        width: 250,
+        height: 250,
+        type: "svg",
+        data: `https://tu-parque.com/validar?ticket=${transactionId}`,
+        dotsOptions: { color: "#000", type: "rounded" },
+        backgroundOptions: { color: "#FFF" }
+    });
+    qrCode.append(qrContainer);
 
-   // ✅ Guardar en Firebase solo si es un nuevo transactionId
-   if (!localStorage.getItem("ticketSaved")) {
-      guardarTicketEnFirebase(transactionId, entrada);
-      localStorage.setItem("ticketSaved", "true"); // 🔹 Marcar que ya se guardó
-   } else {
-      console.log("El ticket ya estaba guardado en Firebase, evitando duplicados.");
-   }
+    // ✅ Guardar en Firebase solo si es un nuevo transactionId
+    if (!localStorage.getItem("ticketSaved")) {
+        guardarTicketEnFirebase(transactionId, entrada);
+        localStorage.setItem("ticketSaved", "true"); // 🔹 Marcar que ya se guardó
+    } else {
+        console.log("El ticket ya estaba guardado en Firebase, evitando duplicados.");
+    }
+
+    // ✅ Asignar eventos a los botones
+    console.log("Asignando eventos a los botones...");
+
+    // Evento para descargar imagen
+    document.getElementById("downloadImage").addEventListener("click", downloadImage);
+    document.getElementById("downloadPDF").addEventListener("click", downloadPDF);
+
+    // ✅ Verificación del botón 'Volver al Inicio'
+    let goHomeButton = document.getElementById("goHome");
+    if (goHomeButton) {
+        console.log("✅ Botón 'Volver al Inicio' encontrado.");
+        goHomeButton.addEventListener("click", function () {
+            console.log("✅ Botón de volver al inicio clickeado.");
+            window.location.href = window.location.origin + "/index.html"; // 🔹 Redirige a la página de inicio
+        });
+    } else {
+        console.error("❌ Error: Botón 'Volver al Inicio' NO encontrado.");
+    }
+
+    console.log("Eventos asignados correctamente.");
 });
-      function downloadImage() {
-         console.log("Intentando descargar imagen...");
-         html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-            let link = document.createElement("a");
-            link.href = canvas.toDataURL("image/png");
-            link.download = "ticket.png";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            console.log("Imagen descargada correctamente.");
-         }).catch(error => console.error("Error al capturar la imagen: ", error));
-      }
 
-      function downloadPDF() {
-         console.log("Intentando generar PDF...");
-         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-         html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-            let imgData = canvas.toDataURL("image/png");
-            let imgWidth = 150;
-            let imgHeight = (canvas.height * imgWidth) / canvas.width;
-            let posX = (doc.internal.pageSize.width - imgWidth) / 2;
-            let posY = 30;
-            doc.addImage(imgData, "PNG", posX, posY, imgWidth, imgHeight);
-            doc.save("ticket.pdf");
-            console.log("PDF generado correctamente.");
-         }).catch(error => console.error("Error al generar el PDF: ", error));
-      }
+// 🔹 Función para descargar imagen
+function downloadImage() {
+    console.log("Intentando descargar imagen...");
+    html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
+        let link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "ticket.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log("Imagen descargada correctamente.");
+    }).catch(error => console.error("Error al capturar la imagen: ", error));
+}
 
-      window.onload = function () {
-         console.log("Asignando eventos a los botones...");
-         document.getElementById("downloadImage").addEventListener("click", downloadImage);
-         document.getElementById("downloadPDF").addEventListener("click", downloadPDF);
-         console.log("Eventos asignados correctamente.");
-      };
+// 🔹 Función para descargar PDF
+function downloadPDF() {
+    console.log("Intentando generar PDF...");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
+        let imgData = canvas.toDataURL("image/png");
+        let imgWidth = 150;
+        let imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let posX = (doc.internal.pageSize.width - imgWidth) / 2;
+        let posY = 30;
+        doc.addImage(imgData, "PNG", posX, posY, imgWidth, imgHeight);
+        doc.save("ticket.pdf");
+        console.log("PDF generado correctamente.");
+    }).catch(error => console.error("Error al generar el PDF: ", error));
+}
    </script>
    <style>
       body { text-align: center; font-family: Arial, sans-serif; }
@@ -142,5 +159,7 @@
    </div>
    <button id="downloadImage">Descargar Imagen</button>
    <button id="downloadPDF">Descargar PDF</button>
+   <button id="goHome">Volver al Inicio</button> 
+
 </body>
 </html>
