@@ -41,42 +41,53 @@
       }
 
       document.addEventListener("DOMContentLoaded", async () => {
-         console.log("Todos los scripts han sido cargados correctamente.");
-         window.jsPDF = window.jspdf.jsPDF;
+   console.log("Todos los scripts han sido cargados correctamente.");
+   window.jsPDF = window.jspdf.jsPDF;
 
-         let params = new URLSearchParams(window.location.search);
-         let transactionId = params.get("transactionId") || sessionStorage.getItem("transactionId");
-         let productId = params.get("product");
+   let params = new URLSearchParams(window.location.search);
+   let transactionId = params.get("transactionId") || localStorage.getItem("transactionId");
+   let productId = params.get("product");
 
-         console.log("Producto detectado:", productId);
+   console.log("Producto detectado:", productId);
 
-         if (!productId) {
-            console.warn("⚠️ No se encontró un productId en la URL.");
-         }
+   if (!productId) {
+      console.warn("⚠️ No se encontró un productId en la URL.");
+   }
 
-         let entrada = "Tu Ticket";
+   let entrada = "Tu Ticket";
 
-         if (!transactionId) {
-            transactionId = generarCodigoQR();
-         }
+   // ✅ Si no hay transactionId en la URL ni en localStorage, generar uno nuevo
+   if (!transactionId) {
+      transactionId = generarCodigoQR();
+      localStorage.setItem("transactionId", transactionId); // 🔹 Guardarlo para evitar duplicados
+      console.log("Nuevo transactionId generado:", transactionId);
+   } else {
+      console.log("Usando transactionId existente:", transactionId);
+   }
 
-         document.getElementById("transactionId").innerText = transactionId;
-         document.getElementById("entrada").innerText = entrada;
+   document.getElementById("transactionId").innerText = transactionId;
+   document.getElementById("entrada").innerText = entrada;
 
-         let qrContainer = document.getElementById("qrcode");
-         qrContainer.innerHTML = ""; 
-         const qrCode = new QRCodeStyling({
-            width: 250,
-            height: 250,
-            type: "svg",
-            data: `https://tu-parque.com/validar?ticket=${transactionId}`,
-            dotsOptions: { color: "#000", type: "rounded" },
-            backgroundOptions: { color: "#FFF" }
-         });
-         qrCode.append(qrContainer);
-         guardarTicketEnFirebase(transactionId, entrada);
-      });
+   let qrContainer = document.getElementById("qrcode");
+   qrContainer.innerHTML = ""; 
+   const qrCode = new QRCodeStyling({
+      width: 250,
+      height: 250,
+      type: "svg",
+      data: `https://tu-parque.com/validar?ticket=${transactionId}`,
+      dotsOptions: { color: "#000", type: "rounded" },
+      backgroundOptions: { color: "#FFF" }
+   });
+   qrCode.append(qrContainer);
 
+   // ✅ Guardar en Firebase solo si es un nuevo transactionId
+   if (!localStorage.getItem("ticketSaved")) {
+      guardarTicketEnFirebase(transactionId, entrada);
+      localStorage.setItem("ticketSaved", "true"); // 🔹 Marcar que ya se guardó
+   } else {
+      console.log("El ticket ya estaba guardado en Firebase, evitando duplicados.");
+   }
+});
       function downloadImage() {
          console.log("Intentando descargar imagen...");
          html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
