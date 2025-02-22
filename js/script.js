@@ -50,10 +50,12 @@ $d.addEventListener("click", e => {
         let product = products.find(p => p.id === priceId);
         let productId = product ? product.id : "prod_RnLpZToxGH6M7e";
 
+        const transactionId = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
         Stripe(KEYS.public).redirectToCheckout({
             lineItems: [{ price: priceId, quantity: 1 }],
             mode: "payment",
-            successUrl: `http://127.0.0.1:5501/assets/success.html?product=${productId}`,
+            successUrl: `http://127.0.0.1:5501/assets/success.html?transactionId=${transactionId}&product=${productId}`,
             cancelUrl: "http://127.0.0.1:5501/assets/cancel.html"
         })
         .then(res => {
@@ -68,20 +70,17 @@ $d.addEventListener("click", e => {
 document.addEventListener("DOMContentLoaded", function () {
     console.log("🔹 Todos los scripts han sido cargados correctamente.");
 
-    // ✅ Verificación del botón 'Volver al Inicio'
     let goHomeButton = document.getElementById("goHome");
     if (goHomeButton) {
         console.log("✅ Botón 'Volver al Inicio' encontrado.");
         goHomeButton.addEventListener("click", function () {
             console.log("✅ Botón de volver al inicio clickeado.");
             window.location.href = "http://127.0.0.1:5501/index.html";
-
         });
     } else {
         console.error("❌ Error: Botón 'Volver al Inicio' NO encontrado.");
     }
 
-    // ✅ Verificación del botón "Descargar Imagen"
     let downloadImageButton = document.getElementById("downloadImage");
     if (downloadImageButton) {
         downloadImageButton.addEventListener("click", downloadImage);
@@ -90,7 +89,6 @@ document.addEventListener("DOMContentLoaded", function () {
         console.warn("⚠️ Botón Descargar Imagen NO encontrado.");
     }
 
-    // ✅ Verificación del botón "Descargar PDF"
     let downloadPDFButton = document.getElementById("downloadPDF");
     if (downloadPDFButton) {
         downloadPDFButton.addEventListener("click", downloadPDF);
