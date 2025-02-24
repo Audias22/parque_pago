@@ -9,7 +9,7 @@
    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.3.1/lib/qr-code-styling.min.js" defer></script>
    <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-      import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+      import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
       const firebaseConfig = {
          apiKey: "AIzaSyBDJeze6ibv446maeLso00v5hWx-7o3vpc",
@@ -45,7 +45,12 @@
     window.jsPDF = window.jspdf.jsPDF;
 
     let params = new URLSearchParams(window.location.search);
-    let transactionId = params.get("transactionId") || localStorage.getItem("transactionId");
+    let transactionId = params.get("transactionId");
+
+if (!transactionId) {
+    transactionId = generarCodigoQR();
+    console.log("⚠️ No se encontró transactionId en la URL. Generando uno nuevo:", transactionId);
+}
     let productId = params.get("product");
 
     console.log("Producto detectado:", productId);
@@ -64,10 +69,11 @@
     } else {
         console.log("Usando transactionId existente:", transactionId);
     }
-
+     // ✅ Guardar siempre en Firebase
+     guardarTicketEnFirebase(transactionId, entrada);
     document.getElementById("transactionId").innerText = transactionId;
     document.getElementById("entrada").innerText = entrada;
-
+    
     let qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = ""; 
     const qrCode = new QRCodeStyling({

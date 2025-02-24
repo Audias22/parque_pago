@@ -25,7 +25,7 @@ app.post("/crear-checkout-session", async (req, res) => {
                 }
             })),
             mode: "payment",
-            success_url: "http://localhost:3000/success",
+            success_url: "http://127.0.0.1:5501/assets/success.html",
             cancel_url: "http://127.0.0.1:5501/index.html",
         });
 
