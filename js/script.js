@@ -44,25 +44,35 @@ Promise.all([
 });
 
 $d.addEventListener("click", e => {
-    if (e.target.matches(".entradas *")) {
-        let priceId = e.target.parentElement.getAttribute("data-price");
+    if (e.target.matches(".comprar")) {
+        console.log("✅ Botón Comprar clickeado");
+        let entradaElement = e.target.closest(".entrada");
+        console.log("🔍 Entrada seleccionada:", entradaElement);
 
-        let product = products.find(p => p.id === priceId);
-        let productId = product ? product.id : "prod_RnLpZToxGH6M7e";
+        let priceId = entradaElement.getAttribute("data-price");
+        let cantidad = 1; // Siempre se inicia con 1 entrada en Stripe
+        console.log("🛒 ID del precio:", priceId);
+        console.log("🔢 Cantidad seleccionada:", cantidad);
 
-        const transactionId = Math.random().toString(36).substring(2, 10).toUpperCase();
-        
-        Stripe(KEYS.public).redirectToCheckout({
-            lineItems: [{ price: priceId, quantity: 1 }],
-            mode: "payment",
-            successUrl: `http://127.0.0.1:5501/assets/success.html?transactionId=${transactionId}&product=${productId}`,
-            cancelUrl: "http://127.0.0.1:5501/assets/cancel.html"
+        if (cantidad < 1) {
+            alert("Debe seleccionar al menos una entrada.");
+            return;
+        }
+
+        // 🔹 Verificar qué datos estamos enviando al backend
+        const requestData = { items: [{ priceId, quantity: cantidad }] };
+        console.log("📤 Enviando datos al backend:", requestData);
+
+        fetch("http://localhost:3000/crear-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: [{ priceId, quantity: cantidad }] }) // 🔹 Enviamos al backend
         })
-        .then(res => {
-            if (res.error) {
-                $entradas.insertAdjacentElement("afterend", res.error.message);
-            }
-        });
+        .then(res => res.json())
+        .then(data => {
+            Stripe(KEYS.public).redirectToCheckout({ sessionId: data.id }); // 🔹 Stripe maneja el pago
+        })
+        .catch(error => console.error("Error en la sesión de pago:", error));
     }
 });
 
