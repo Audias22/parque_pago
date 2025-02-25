@@ -28,98 +28,149 @@
          return Math.random().toString(36).substring(2, 10).toUpperCase();
       }
 
-      async function guardarTicketEnFirebase(transactionId) {
-         try {
-            // Verificar si el ticket ya existe en Firebase para evitar duplicados
-            const q = query(collection(db, "tickets"), where("codigoQR", "==", transactionId));
-            const querySnapshot = await getDocs(q);
+      async function guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal) {
+          try {
+              const q = query(collection(db, "tickets"), where("codigoQR", "==", transactionId));
+              const querySnapshot = await getDocs(q);
 
-            if (!querySnapshot.empty) {
-               console.log("⚠️ Ticket ya existe en Firebase, no se guarda nuevamente.");
-               return;
-            }
+              if (!querySnapshot.empty) {
+                  console.log("⚠️ Ticket ya existe en Firebase, no se guarda nuevamente.");
+                  return;
+              }
 
-            await addDoc(collection(db, "tickets"), {
-               codigoQR: transactionId,
-               fecha: new Date(),
-               usado: false
-            });
+              await addDoc(collection(db, "tickets"), {
+                  codigoQR: transactionId,
+                  fecha: new Date(),
+                  usado: false,
+                  tipoEntrada: tipoEntrada,
+                  montoTotal: montoTotal
+              });
 
-            console.log("✅ Ticket guardado en Firebase:", transactionId);
-         } catch (e) {
-            console.error("❌ Error al guardar el ticket en Firebase:", e);
-         }
+              console.log("✅ Ticket guardado en Firebase con tipo de entrada y monto total.");
+          } catch (e) {
+              console.error("❌ Error al guardar el ticket en Firebase:", e);
+          }
       }
 
       document.addEventListener("DOMContentLoaded", async function () {
-         console.log("🔹 Iniciando carga de ticket...");
+    console.log("🔹 Cargando ticket...");
 
-         window.jsPDF = window.jspdf.jsPDF;
+    // Asegurar que jsPDF está disponible antes de asignarlo
+    if (window.jspdf) {
+        window.jsPDF = window.jspdf.jsPDF;
+    } else {
+        console.error("❌ jsPDF no está definido.");
+    }
 
-         let params = new URLSearchParams(window.location.search);
-         let transactionId = params.get("transactionId");
+    let params = new URLSearchParams(window.location.search);
+    let sessionId = params.get("session_id");
 
-         if (!transactionId) {
-            transactionId = localStorage.getItem("transactionId");
+    if (!sessionId) {
+        console.error("❌ No se encontró session_id en la URL.");
+        return;
+    }
 
-            if (!transactionId) {
-               transactionId = generarCodigoQR();
-               localStorage.setItem("transactionId", transactionId);
-               console.log("⚠️ No se encontró transactionId en URL. Se generó uno nuevo:", transactionId);
-            } else {
-               console.log("✅ Se usó transactionId desde localStorage:", transactionId);
-            }
-         } else {
-            console.log("✅ Se usó transactionId desde la URL:", transactionId);
+    console.log("📌 Consultando detalles de la sesión de Stripe...");
+
+    try {
+        let response = await fetch(`http://localhost:3000/obtener-detalles-sesion?session_id=${sessionId}`);
+        let data = await response.json();
+
+        if (!data || !data.transactionId) {
+            console.error("❌ No se encontró transactionId en la sesión de Stripe.");
+            return;
+        }
+
+        // ⚠️ Verificar si la compra es nueva
+        let prevSessionId = localStorage.getItem("prevSessionId");
+        let transactionId;
+
+        if (prevSessionId !== sessionId) {
+            console.log("🆕 Nueva compra detectada, generando nuevo Transaction ID...");
+            transactionId = generarCodigoQR();
             localStorage.setItem("transactionId", transactionId);
-         }
+            localStorage.setItem("prevSessionId", sessionId);
+            localStorage.removeItem("ticketGuardado"); // Permite guardar un nuevo ticket en Firebase
+        } else {
+            console.log("♻️ Misma sesión detectada, reutilizando Transaction ID...");
+            transactionId = localStorage.getItem("transactionId");
+        }
 
-         document.getElementById("transactionId").innerText = transactionId;
+        console.log("📌 Transaction ID FINAL:", transactionId);
+        document.getElementById("transactionId").innerText = transactionId;
 
-         let qrContainer = document.getElementById("qrcode");
-         qrContainer.innerHTML = ""; 
-         const qrCode = new QRCodeStyling({
+        let tipoEntrada = data.tipoEntrada || "Desconocido";
+        let montoTotal = `${(data.montoTotal / 100).toFixed(2)}`;
+
+        document.getElementById("tipoEntrada").innerText = tipoEntrada;
+        document.getElementById("montoTotal").innerText = montoTotal;
+
+        // 🔄 Generar nuevo código QR solo si la compra es nueva
+        let qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = ""; 
+        const qrCode = new QRCodeStyling({
             width: 250,
             height: 250,
             type: "svg",
-            data: transactionId,
+            data: `https://tu-parque.com/validar?ticket=${transactionId}`,
             dotsOptions: { color: "#000", type: "rounded" },
             backgroundOptions: { color: "#FFF" }
-         });
-         qrCode.append(qrContainer);
+        });
+        qrCode.append(qrContainer);
 
-         await guardarTicketEnFirebase(transactionId);
+              if (!localStorage.getItem("ticketGuardado")) {
+                  await guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal);
+                  localStorage.setItem("ticketGuardado", "true");
+              }
 
-         document.getElementById("downloadImage").addEventListener("click", downloadImage);
-         document.getElementById("downloadPDF").addEventListener("click", downloadPDF);
+          } catch (error) {
+              console.error("❌ Error al obtener los detalles de Stripe:", error);
+          }
 
-         let goHomeButton = document.getElementById("goHome");
-         if (goHomeButton) {
-            goHomeButton.addEventListener("click", function () {
-               localStorage.removeItem("transactionId");
-               window.location.href = window.location.origin + "/index.html";
-            });
-         }
+          // Asegurar eventos de los botones
+          const downloadImageBtn = document.getElementById("downloadImage");
+          const downloadPDFBtn = document.getElementById("downloadPDF");
+          const goHomeButton = document.getElementById("goHome");
+
+          if (downloadImageBtn) {
+              downloadImageBtn.addEventListener("click", downloadImage);
+          }
+
+          if (downloadPDFBtn) {
+              downloadPDFBtn.addEventListener("click", downloadPDF);
+          }
+
+          if (goHomeButton) {
+              goHomeButton.addEventListener("click", function () {
+                  console.log("🏠 Volviendo al inicio...");
+                  localStorage.clear();
+                  window.location.href = window.location.origin + "/index.html";
+              });
+          }
       });
 
       function downloadImage() {
-         html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-            let link = document.createElement("a");
-            link.href = canvas.toDataURL("image/png");
-            link.download = "ticket.png";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-         });
+          html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
+              let link = document.createElement("a");
+              link.href = canvas.toDataURL("image/png");
+              link.download = "ticket.png";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+          }).catch(error => {
+              console.error("❌ Error al generar la imagen:", error);
+          });
       }
 
       function downloadPDF() {
-         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-         html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-            let imgData = canvas.toDataURL("image/png");
-            doc.addImage(imgData, "PNG", 30, 30, 150, (canvas.height * 150) / canvas.width);
-            doc.save("ticket.pdf");
-         });
+          html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
+              const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+              let imgData = canvas.toDataURL("image/png");
+              doc.addImage(imgData, "PNG", 30, 30, 150, (canvas.height * 150) / canvas.width);
+              doc.save("ticket.pdf");
+          }).catch(error => {
+              console.error("❌ Error al generar el PDF:", error);
+          });
       }
    </script>
 
@@ -138,10 +189,12 @@
       <h3>Tu Ticket</h3>
       <p>Diversión Infinita</p>
       <p>ID de transacción: <span id="transactionId"></span></p>
+      <p>Tipo de Entrada: <span id="tipoEntrada"></span></p>
+      <p>Monto Total: Q<span id="montoTotal"></span></p>
       <div id="qrcode"></div>
    </div>
    <button id="downloadImage">Descargar Imagen</button>
    <button id="downloadPDF">Descargar PDF</button>
-   <button id="goHome">Volver al Inicio</button> 
+   <button id="goHome">Volver al Inicio</button>
 </body>
 </html>
