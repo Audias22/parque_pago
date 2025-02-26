@@ -28,29 +28,30 @@
          return Math.random().toString(36).substring(2, 10).toUpperCase();
       }
 
-      async function guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal) {
-          try {
-              const q = query(collection(db, "tickets"), where("codigoQR", "==", transactionId));
-              const querySnapshot = await getDocs(q);
+      async function guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal, cantidadEntradas) {
+    try {
+        const q = query(collection(db, "tickets"), where("codigoQR", "==", transactionId));
+        const querySnapshot = await getDocs(q);
 
-              if (!querySnapshot.empty) {
-                  console.log("⚠️ Ticket ya existe en Firebase, no se guarda nuevamente.");
-                  return;
-              }
+        if (!querySnapshot.empty) {
+            console.log("⚠️ Ticket ya existe en Firebase, no se guarda nuevamente.");
+            return;
+        }
 
-              await addDoc(collection(db, "tickets"), {
-                  codigoQR: transactionId,
-                  fecha: new Date(),
-                  usado: false,
-                  tipoEntrada: tipoEntrada,
-                  montoTotal: montoTotal
-              });
+        await addDoc(collection(db, "tickets"), {
+            codigoQR: transactionId,
+            fecha: new Date(),
+            usado: false,
+            tipoEntrada: tipoEntrada,
+            montoTotal: montoTotal,
+            cantidadEntradas: cantidadEntradas // ✅ Ahora se guarda la cantidad de entradas
+        });
 
-              console.log("✅ Ticket guardado en Firebase con tipo de entrada y monto total.");
-          } catch (e) {
-              console.error("❌ Error al guardar el ticket en Firebase:", e);
-          }
-      }
+        console.log("✅ Ticket guardado en Firebase con tipo de entrada, monto total y cantidad de entradas.");
+    } catch (e) {
+        console.error("❌ Error al guardar el ticket en Firebase:", e);
+    }
+}
 
       document.addEventListener("DOMContentLoaded", async function () {
     console.log("🔹 Cargando ticket...");
@@ -153,8 +154,9 @@ console.log("📌 Cantidad de entradas:", cantidadEntradas);
         });
         qrCode.append(qrContainer);
 
+            // ✅ Guardar en Firebase solo si es una nueva compra
               if (!localStorage.getItem("ticketGuardado")) {
-                  await guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal);
+                await guardarTicketEnFirebase(transactionId, tipoEntrada, montoTotal, cantidadEntradas);
                   localStorage.setItem("ticketGuardado", "true");
               }
 
