@@ -100,10 +100,45 @@
         document.getElementById("transactionId").innerText = transactionId;
 
         let tipoEntrada = data.tipoEntrada || "Desconocido";
-        let montoTotal = `${(data.montoTotal / 100).toFixed(2)}`;
+        let montoTotal = parseFloat((data.montoTotal / 100).toFixed(2)); // ✅ Convertimos de centavos a quetzales
+
+// 🔹 Normalizar el tipo de entrada eliminando espacios y asegurando minúsculas
+let tipoEntradaNormalizado = tipoEntrada.toLowerCase().trim();
+
+// 🔹 Definir los precios correctos de cada tipo de entrada
+const preciosEntradas = {
+    "entrada clásica": 50,
+    "entrada vip": 99,
+    "entrada infantil": 30
+};
+
+// 🔹 Intentar emparejar el tipo de entrada con las claves de preciosEntradas
+let precioEntrada = null;
+Object.keys(preciosEntradas).forEach(key => {
+    if (tipoEntradaNormalizado.includes(key.split(" ")[1])) {
+        precioEntrada = preciosEntradas[key];
+    }
+});
+
+// 🔹 Si no se encuentra una coincidencia exacta, mostrar advertencia
+if (!precioEntrada) {
+    console.warn(`⚠️ Tipo de entrada "${tipoEntrada}" no encontrado en la lista de precios.`);
+    precioEntrada = 1; // Evita división por 0 y errores
+}
+
+// 🔹 Calcular correctamente la cantidad de entradas
+let cantidadEntradas = Math.floor(montoTotal / precioEntrada);
+
+console.log("📌 Tipo de entrada (original):", tipoEntrada);
+console.log("📌 Tipo de entrada (normalizado):", tipoEntradaNormalizado);
+console.log("📌 Monto total:", montoTotal);
+console.log("📌 Precio por entrada:", precioEntrada);
+console.log("📌 Cantidad de entradas:", cantidadEntradas);
 
         document.getElementById("tipoEntrada").innerText = tipoEntrada;
-        document.getElementById("montoTotal").innerText = montoTotal;
+        document.getElementById("cantidadEntradas").innerText = cantidadEntradas;
+        document.getElementById("montoTotal").innerText = `${montoTotal.toFixed(2)}`;
+        
 
         // 🔄 Generar nuevo código QR solo si la compra es nueva
         let qrContainer = document.getElementById("qrcode");
@@ -190,6 +225,7 @@
       <p>Diversión Infinita</p>
       <p>ID de transacción: <span id="transactionId"></span></p>
       <p>Tipo de Entrada: <span id="tipoEntrada"></span></p>
+      <p>Cantidad de Entradas: <span id="cantidadEntradas"></span></p>
       <p>Monto Total: Q<span id="montoTotal"></span></p>
       <div id="qrcode"></div>
    </div>
