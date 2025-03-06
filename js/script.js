@@ -84,34 +84,65 @@ document.addEventListener("click", async (e) => {
 
 // ✅ ASIGNAR EVENTO AL BOTÓN "VOLVER AL INICIO"
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("🔹 Todos los scripts han sido cargados correctamente.");
+    // Verifica si estamos en la página success.html
+    if (window.location.pathname.includes("success.html")) {
+        console.log("✅ Página de éxito detectada. Se aplicarán restricciones de salida.");
 
-    let goHomeButton = document.getElementById("goHome");
-    if (goHomeButton) {
-        console.log("✅ Botón 'Volver al Inicio' encontrado.");
-        goHomeButton.addEventListener("click", function () {
-            console.log("✅ Botón de volver al inicio clickeado.");
-            window.location.href = "http://127.0.0.1:5501/index.html";
+        // ✅ Alerta inicial SOLO en success.html
+        setTimeout(() => {
+            alert("⚠️ Asegúrese de descargar su ticket antes de salir de este sitio.");
+        }, 500);
+
+        let goHomeButton = document.getElementById("goHome");
+        let downloadImageButton = document.getElementById("downloadImage");
+        let downloadPDFButton = document.getElementById("downloadPDF");
+
+        // ✅ Marcar como descargado cuando el usuario presiona "Descargar Imagen"
+        if (downloadImageButton) {
+            downloadImageButton.addEventListener("click", function () {
+                downloadImage();
+                localStorage.setItem("ticketDescargado", "true");
+                console.log("✅ Ticket descargado como imagen.");
+            });
+        }
+
+        // ✅ Marcar como descargado cuando el usuario presiona "Descargar PDF"
+        if (downloadPDFButton) {
+            downloadPDFButton.addEventListener("click", function () {
+                downloadPDF();
+                localStorage.setItem("ticketDescargado", "true");
+                console.log("✅ Ticket descargado como PDF.");
+            });
+        }
+
+        // ✅ Interceptar la salida desde el botón "Volver al Inicio"
+        if (goHomeButton) {
+            goHomeButton.addEventListener("click", function (event) {
+                let ticketDescargado = localStorage.getItem("ticketDescargado");
+
+                if (!ticketDescargado) {
+                    event.preventDefault(); // Evita la redirección
+                    alert("⚠️ Debes descargar tu ticket antes de salir.");
+                } else {
+                    console.log("✅ Ticket descargado. Redirigiendo al inicio...");
+                    localStorage.removeItem("ticketDescargado");
+                    window.location.href = "http://127.0.0.1:5501/index.html";
+                }
+            });
+        }
+
+        // ✅ Interceptar cierre de pestaña o recarga
+        window.addEventListener("beforeunload", function (event) {
+            let ticketDescargado = localStorage.getItem("ticketDescargado");
+
+            if (!ticketDescargado) {
+                event.preventDefault();
+                event.returnValue = "⚠️ No has descargado tu ticket. ¿Estás seguro de que deseas salir?";
+            }
         });
-    } else {
-        console.error("❌ Error: Botón 'Volver al Inicio' NO encontrado.");
-    }
 
-    let downloadImageButton = document.getElementById("downloadImage");
-    if (downloadImageButton) {
-        downloadImageButton.addEventListener("click", downloadImage);
-        console.log("✅ Evento asignado al botón Descargar Imagen.");
     } else {
-        console.warn("⚠️ Botón Descargar Imagen NO encontrado.");
+        console.log("🔹 No estamos en la página de éxito. No se aplicarán restricciones.");
     }
-
-    let downloadPDFButton = document.getElementById("downloadPDF");
-    if (downloadPDFButton) {
-        downloadPDFButton.addEventListener("click", downloadPDF);
-        console.log("✅ Evento asignado al botón Descargar PDF.");
-    } else {
-        console.warn("⚠️ Botón Descargar PDF NO encontrado.");
-    }
-
-    console.log("✅ Todos los eventos fueron asignados correctamente.");
 });
+

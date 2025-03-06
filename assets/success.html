@@ -210,7 +210,6 @@ console.log("📌 Cantidad de entradas:", cantidadEntradas);
           });
       }
    </script>
-
    <style>
       body { text-align: center; font-family: Arial, sans-serif; }
       .ticket-container { width: 300px; margin: auto; padding: 20px; border: 2px solid black; background: #fff; text-align: center; }
@@ -234,5 +233,13 @@ console.log("📌 Cantidad de entradas:", cantidadEntradas);
    <button id="downloadImage">Descargar Imagen</button>
    <button id="downloadPDF">Descargar PDF</button>
    <button id="goHome">Volver al Inicio</button>
+   <script src="js/script.js"></script>
+   <script>
+    window.onload = function () {
+        setTimeout(() => {
+            alert("⚠️ Asegúrese de descargar su ticket antes de salir de este sitio.");
+        }, 500); // Se muestra 0.5 segundos después de cargar la página
+    };
+</script>
 </body>
 </html>
