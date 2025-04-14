@@ -1,44 +1,124 @@
 <!DOCTYPE html>
 <html lang="es-AR">
 <head>
-   <!-- CHARSET -->
+   <!-- META -->
    <meta charset="UTF-8">
-   <!-- IE-EDGE -->
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <!-- VIEWPORT -->
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <!-- DESCRIPTION -->
-   <meta name="description" content="BYTE DEVELOOPERS">
-   <!-- AUTHOR -->
+   <meta name="description" content="SAMA SQUAD">
    <meta name="author" content="Audias Guevara">
-   <!-- TITTLE -->
-   <title>Audias Guevara | Diversion_infinita </title>
-   <!-- STYLES -->
-   <link rel="stylesheet" href="css/styles.css">
-   <!-- FONT AWESOME -->
+   <title>Audias Guevara | Don Samaco Park </title>
+
+   <!-- ESTILO MODERNO -->
+   <style>
+     body {
+       margin: 0;
+       font-family: 'Segoe UI', sans-serif;
+       background: linear-gradient(to bottom right, #e0f7fa, #f0f4f8);
+       color: #1f2937;
+       padding: 2rem;
+     }
+
+     .container span {
+       display: block;
+       text-align: center;
+       font-size: 2.4rem;
+       font-weight: bold;
+       margin-bottom: 2rem;
+       color: #1e3a8a;
+     }
+
+     .entradas {
+       display: flex;
+       justify-content: center;
+       gap: 2rem;
+       flex-wrap: wrap;
+     }
+
+     .entrada {
+       background-color: #ffffff;
+       border-radius: 16px;
+       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+       overflow: hidden;
+       width: 260px;
+       text-align: center;
+       transition: transform 0.3s ease;
+     }
+
+     .entrada:hover {
+       transform: scale(1.05);
+     }
+
+     .entrada img {
+       width: 100%;
+       height: 160px;
+       object-fit: cover;
+       border-bottom: 1px solid #e5e7eb;
+     }
+
+     .entrada figcaption {
+       padding: 1rem;
+       font-size: 1.1rem;
+       font-weight: 600;
+       color: #1f2937;
+       min-height: 60px;
+     }
+
+     .comprar {
+       background-color: #10b981;
+       color: white;
+       border: none;
+       padding: 10px 16px;
+       border-radius: 8px;
+       font-size: 0.95rem;
+       margin-bottom: 1rem;
+       cursor: pointer;
+       transition: background-color 0.3s ease;
+     }
+
+     .comprar:hover {
+       background-color: #059669;
+     }
+
+     @media (max-width: 600px) {
+       .entradas {
+         flex-direction: column;
+         align-items: center;
+       }
+
+       .entrada {
+         width: 90%;
+       }
+     }
+   </style>
+
+   <!-- FONT AWESOME (opcional) -->
    <script src="https://kit.fontawesome.com/73f851add2.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-<div class="container">
-  <span>Diversion infinita</span>
-  <img src="/logoParque.png" alt="Guatemala"> 
-</div>
+  <!-- TÍTULO DEL PARQUE -->
+  <div class="container">
+    <span>Don Samaco Park</span>
+  </div>
 
-<section class="entradas" id="entradas"></section>
+  <!-- CONTENEDOR DE ENTRADAS -->
+  <section class="entradas" id="entradas"></section>
 
-<template id="entrada-template">
-  <figure class="entrada">
-    <img>
-    <figcaption></figcaption>
-    <button class="comprar">Comprar</button>
+  <!-- PLANTILLA DE ENTRADA -->
+  <template id="entrada-template">
+    <figure class="entrada">
+      <img>
+      <figcaption></figcaption>
+      <button class="comprar">Comprar</button>
+    </figure>
+  </template>
 
-  </figure>
-</template>
+  <!-- STRIPE -->
+  <script src="https://js.stripe.com/v3/"></script>
 
-<script src="https://js.stripe.com/v3/"></script>
-<script src="js/script.js" type="module"></script>
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="js/script.js" type="module"></script>
 </body>
-
 </html>

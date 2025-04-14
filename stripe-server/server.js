@@ -21,7 +21,7 @@ app.post("/crear-checkout-session", async (req, res) => {
                 adjustable_quantity: {
                     enabled: true,
                     minimum: 1,
-                    maximum: 10
+                    maximum: 100
                 }
             })),
             mode: "payment",

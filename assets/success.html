@@ -108,18 +108,24 @@ let tipoEntradaNormalizado = tipoEntrada.toLowerCase().trim();
 
 // 🔹 Definir los precios correctos de cada tipo de entrada
 const preciosEntradas = {
-    "entrada clásica": 50,
-    "entrada vip": 99,
-    "entrada infantil": 30
+    "entrada general": 25,
+    "pase a atracciones": 150
 };
+
 
 // 🔹 Intentar emparejar el tipo de entrada con las claves de preciosEntradas
 let precioEntrada = null;
-Object.keys(preciosEntradas).forEach(key => {
-    if (tipoEntradaNormalizado.includes(key.split(" ")[1])) {
-        precioEntrada = preciosEntradas[key];
-    }
-});
+
+if (tipoEntradaNormalizado.includes("entrada")) {
+    precioEntrada = 25;
+} else if (tipoEntradaNormalizado.includes("pase") || tipoEntradaNormalizado.includes("tarjeta")) {
+    precioEntrada = 150;
+}
+
+if (!precioEntrada) {
+    console.warn(`⚠️ Tipo de entrada "${tipoEntradaNormalizado}" no reconocido.`);
+    precioEntrada = 1;
+}
 
 // 🔹 Si no se encuentra una coincidencia exacta, mostrar advertencia
 if (!precioEntrada) {
@@ -187,59 +193,170 @@ console.log("📌 Cantidad de entradas:", cantidadEntradas);
       });
 
       function downloadImage() {
-          html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-              let link = document.createElement("a");
-              link.href = canvas.toDataURL("image/png");
-              link.download = "ticket.png";
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-          }).catch(error => {
-              console.error("❌ Error al generar la imagen:", error);
-          });
-      }
+  const ticket = document.querySelector(".ticket-content");
 
-      function downloadPDF() {
-          html2canvas(document.getElementById("ticket"), { scale: 3 }).then(canvas => {
-              const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-              let imgData = canvas.toDataURL("image/png");
-              doc.addImage(imgData, "PNG", 30, 30, 150, (canvas.height * 150) / canvas.width);
-              doc.save("ticket.pdf");
-          }).catch(error => {
-              console.error("❌ Error al generar el PDF:", error);
-          });
-      }
+  html2canvas(ticket, { scale: 3 }).then(canvas => {
+    let link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = "ticket.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }).catch(error => {
+    console.error("❌ Error al generar la imagen:", error);
+  });
+}
+
+function downloadPDF() {
+  const ticket = document.querySelector(".ticket-content");
+
+  html2canvas(ticket, { scale: 3 }).then(canvas => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    let imgData = canvas.toDataURL("image/png");
+    const imgWidth = 180;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    doc.addImage(imgData, "PNG", 15, 20, imgWidth, imgHeight);
+    doc.save("ticket.pdf");
+  }).catch(error => {
+    console.error("❌ Error al generar el PDF:", error);
+  });
+}
    </script>
-   <style>
-      body { text-align: center; font-family: Arial, sans-serif; }
-      .ticket-container { width: 300px; margin: auto; padding: 20px; border: 2px solid black; background: #fff; text-align: center; }
-      #qrcode { margin: 10px auto; display: flex; justify-content: center; }
-      button { margin: 10px; padding: 10px; border: none; background: #007bff; color: white; cursor: pointer; border-radius: 5px; }
-      button:hover { background: #0056b3; }
-   </style>
+<style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+    }
+  
+    h2 {
+      font-size: 1.6rem;
+      color: #111827;
+      margin: 0.5rem 0 0.3rem 0;
+      font-weight: 700;
+    }
+  
+    .subtitulo {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+  
+    .ticket-container.ticket-content {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  max-width: 380px;
+  margin: 1.5rem auto 1rem;
+  padding: 1.2rem;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  color: #1f2937;
+}
+
+.ticket-container.ticket-content h3 {
+  font-size: 1.1rem;
+  margin-top: 0;
+  color: #1f2937;
+}
+
+.ticket-container.ticket-content p {
+  font-size: 0.95rem;
+  color: #374151;
+  margin: 0.3rem 0;
+}
+
+.ticket-container.ticket-content span {
+  font-weight: 600;
+  color: #111827;
+}
+    #qrcode {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+  
+    .botones {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+  
+    .botones button {
+      background-color: #2563eb;
+      color: white;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+  
+    .botones button:hover {
+      background-color: #1e40af;
+    }
+  
+    @media (max-width: 480px) {
+      .ticket-container {
+        width: 92%;
+        padding: 1rem;
+      }
+  
+      h2 {
+        font-size: 1.3rem;
+      }
+  
+      .subtitulo {
+        font-size: 0.85rem;
+      }
+  
+      .botones {
+        flex-direction: column;
+        gap: 8px;
+      }
+  
+      .botones button {
+        width: 100%;
+      }
+    }
+  </style>
+  
 </head>
 <body>
-   <h2>¡Gracias por tu compra!</h2>
-   <p>Tu pago ha sido exitoso. A continuación, puedes descargar tu ticket.</p>
-   <div class="ticket-container" id="ticket">
-      <h3>Tu Ticket</h3>
-      <p>Diversión Infinita</p>
-      <p>ID de transacción: <span id="transactionId"></span></p>
-      <p>Tipo de Entrada: <span id="tipoEntrada"></span></p>
-      <p>Cantidad de Entradas: <span id="cantidadEntradas"></span></p>
-      <p>Monto Total: Q<span id="montoTotal"></span></p>
-      <div id="qrcode"></div>
-   </div>
-   <button id="downloadImage">Descargar Imagen</button>
-   <button id="downloadPDF">Descargar PDF</button>
-   <button id="goHome">Volver al Inicio</button>
-   <script src="js/script.js"></script>
-   <script>
-    window.onload = function () {
+    <h2>¡Gracias por tu compra!</h2>
+    <p class="subtitulo">Tu pago ha sido exitoso. A continuación, puedes descargar tu ticket.</p>   
+  
+   <!-- En tu HTML -->
+   <div class="ticket-container ticket-content" id="ticket">
+    <h3>Tu Ticket - Don Samaco Park</h3>
+    <p>ID de transacción: <span id="transactionId"></span></p>
+    <p>Tipo de Entrada: <span id="tipoEntrada"></span></p>
+    <p>Cantidad de Entradas: <span id="cantidadEntradas"></span></p>
+    <p>Monto Total: Q<span id="montoTotal"></span></p>
+    <div id="qrcode"></div>
+  </div>
+  
+
+    <!-- ✅ Botones dentro de contenedor con estilo -->
+    <div class="botones">
+      <button id="downloadImage">Descargar Imagen</button>
+      <button id="downloadPDF">Descargar PDF</button>
+      <button id="goHome">Volver al Inicio</button>
+    </div>
+  
+    <script src="js/script.js"></script>
+    <script>
+      window.onload = function () {
         setTimeout(() => {
-            alert("⚠️ Asegúrese de descargar su ticket antes de salir de este sitio.");
-        }, 500); // Se muestra 0.5 segundos después de cargar la página
-    };
-</script>
-</body>
-</html>
+          alert("⚠️ Asegúrese de descargar su ticket antes de salir de este sitio.");
+        }, 500);
+      };
+    </script>
+  </body>
+  

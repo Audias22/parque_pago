@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@stripe/stripe-react-native": "^0.43.0",
     "dotenv": "^16.4.7",
     "nodemailer": "^6.10.0"
   }

@@ -8,6 +8,7 @@ const options = { headers: { Authorization: `Bearer ${KEYS.secret}` } };
 const FormatoDeMoneda = num => `Q ${num.slice(0, -2)}.${num.slice(-2)}`;
 
 let products, prices;
+console.log("🔑 KEY SECRETA:", KEYS.secret);
 
 Promise.all([
     fetch("https://api.stripe.com/v1/products", options),
@@ -18,14 +19,35 @@ Promise.all([
     products = json[0].data;
     prices = json[1].data;
 
+    console.log("📦 Productos y precios desde Stripe:", products, prices);
+
+    // 👉 Filtramos solo los productos válidos
+    const productosPermitidos = [
+        "prod_S7jtGpwQW2hxiX", // Entrada General
+        "prod_S7k3l5kRaNgZmw"  // Pase a Atracciones
+    ];
+
     prices.forEach(el => {
         let productData = products.find(product => product.id === el.product);
+        if (!productData) return;
+
+        if (!productosPermitidos.includes(productData.id)) return;
+
+        // 🔤 Texto personalizado según el producto
+        let texto = "";
+        if (productData.name.toLowerCase().includes("general")) {
+            texto = "🎟 Entrada general Q 25.00 GTQ";
+        } else if (productData.name.toLowerCase().includes("pase")) {
+            texto = "🪙 Pase a atracciones Q 150.00 GTQ";
+        } else {
+            texto = `${productData.name} ${FormatoDeMoneda(el.unit_amount_decimal)} ${(el.currency).toUpperCase()}`;
+        }
 
         if ($template) {
             $template.querySelector(".entrada").setAttribute("data-price", el.id);
             $template.querySelector("img").src = productData.images[0];
             $template.querySelector("img").alt = productData.name;
-            $template.querySelector("figcaption").innerHTML = `${productData.name} ${FormatoDeMoneda(el.unit_amount_decimal)} ${(el.currency).toUpperCase()}`;
+            $template.querySelector("figcaption").innerText = texto;
 
             let $clone = $d.importNode($template, true);
             $fragment.appendChild($clone);
@@ -36,6 +58,7 @@ Promise.all([
         $entradas.appendChild($fragment);
     }
 })
+
 .catch(error => {
     let message = error.statusText || "Ocurrió un error en la petición";
     if ($entradas) {
